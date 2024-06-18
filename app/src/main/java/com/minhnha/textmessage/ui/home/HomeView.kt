@@ -14,23 +14,29 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.minhnha.textmessage.theme.TextMessageTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeView() {
+    val viewModel = hiltViewModel<HomeViewModel>()
+    val coroutine = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFFFFFFF)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Scanned devices", fontSize = 20.sp)
+        Text(text = "Scanned devices", style = TextStyle(fontSize = 20.sp))
         Spacer(modifier = Modifier.height(10.dp))
         Column(
             modifier = Modifier
@@ -55,7 +61,11 @@ fun HomeView() {
             horizontalArrangement = Arrangement.Center
         ) {
             Button(
-                onClick = { /*TODO*/ },
+                onClick = {
+                    coroutine.launch {
+                        viewModel.startScan()
+                    }
+                },
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
@@ -67,7 +77,7 @@ fun HomeView() {
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Connect")
+                Text(text = "Establish")
             }
         }
     }

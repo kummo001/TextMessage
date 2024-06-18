@@ -34,6 +34,8 @@ dependencies {
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat
     implementation libs.material
+    implementation libs.hilt.android.v2511
+    annotationProcessor libs.hilt.compiler.v2511
     implementation project(':domain')
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
