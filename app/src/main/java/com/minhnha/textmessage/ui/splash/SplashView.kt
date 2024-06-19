@@ -21,7 +21,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashView(navController: NavController) {
     LaunchedEffect(key1 = Unit){
-        delay(2000)
+        delay(1000)
         navController.popBackStack()
         navController.navigate(HomeRoute.Home.Route)
     }
@@ -33,7 +33,7 @@ fun SplashView(navController: NavController) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "TextMe",
+            text = "Text Me",
             textAlign = TextAlign.Center,
             style = TextStyle(color = Color(0xFFFFFFFF), fontSize = 36.sp, fontWeight = FontWeight.W600)
         )

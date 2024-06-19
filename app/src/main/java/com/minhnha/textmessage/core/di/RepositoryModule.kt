@@ -1,6 +1,6 @@
 package com.minhnha.textmessage.core.di
 
-import com.minhnha.data.DeviceConnectionRepositoryImpl
+import com.minhnha.data.datasource.DeviceConnectionRepositoryImpl
 import com.minhnha.domain.interfaces.DeviceConnectionRepository
 import dagger.Binds
 import dagger.Module

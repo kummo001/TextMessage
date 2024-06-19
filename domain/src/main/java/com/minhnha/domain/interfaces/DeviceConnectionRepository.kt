@@ -1,7 +1,7 @@
 package com.minhnha.domain.interfaces
 
 interface DeviceConnectionRepository {
-    suspend fun scanDevices()
-    suspend fun stopScanDevices()
+    suspend fun startAdvertising()
+    suspend fun startDiscovery()
     suspend fun connectDevices()
 }

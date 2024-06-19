@@ -35,6 +35,7 @@ dependencies {
     implementation libs.androidx.appcompat
     implementation libs.material
     implementation libs.hilt.android.v2511
+    implementation libs.play.services.nearby
     annotationProcessor libs.hilt.compiler.v2511
     implementation project(':domain')
     testImplementation libs.junit
