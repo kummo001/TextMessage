@@ -68,8 +68,11 @@ dependencies {
     implementation libs.androidx.navigation.common.ktx
     implementation libs.androidx.navigation.runtime.ktx
     implementation libs.androidx.hilt.navigation.compose
+    implementation libs.androidx.lifecycle.runtime.compose
+    implementation libs.androidx.runtime.livedata
     implementation libs.accompanist.permissions.v0315beta
     implementation libs.hilt.android.v2511
+    implementation libs.play.services.nearby
     annotationProcessor libs.hilt.compiler.v2511
     kapt libs.hilt.compiler.v2511
     testImplementation libs.junit

@@ -1,6 +1,7 @@
 package com.minhnha.textmessage.ui.home
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
@@ -19,14 +20,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,17 +50,130 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.nearby.connection.ConnectionInfo
+import com.google.android.gms.nearby.connection.Payload
+import com.google.android.gms.nearby.connection.PayloadCallback
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import com.minhnha.domain.util.Result
 import com.minhnha.textmessage.R
 import com.minhnha.textmessage.theme.TextMessageTheme
+import com.minhnha.textmessage.ui.composables.BaseButton
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeView() {
     val viewModel = hiltViewModel<HomeViewModel>()
     val coroutine = rememberCoroutineScope()
     val context = LocalContext.current
+    val advertisingState: State<Result> =
+        viewModel.advertisingStatus.observeAsState(initial = Result.Empty)
+    val discoveryState: State<Result> =
+        viewModel.discoveryStatus.observeAsState(initial = Result.Empty)
+    val showAlertDialogEvent: State<Pair<String, ConnectionInfo>?> =
+        viewModel.showAlertDialogEvent.observeAsState()
+    val openDialog = remember {
+        mutableStateOf(false)
+    }
+    Log.d("TM", "Alert dialog event 1: ${showAlertDialogEvent.value?.first}")
+    Log.d("TM", "Alert dialog event 2: ${showAlertDialogEvent.value?.second}")
+    LaunchPermissionRequest(coroutine = coroutine, context = context)
+    if (showAlertDialogEvent.value?.first != null) {
+        openDialog.value = true
+    }
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                val endpointId = showAlertDialogEvent.value?.first
+                if (endpointId != null) {
+                    viewModel.rejectConnection(endpointId)
+                }
+            },
+            confirmButton = {
+                val endpointId = showAlertDialogEvent.value?.first
+                BaseButton(modifier = Modifier, isEnable = true, text = "OK") {
+                    if (endpointId != null) {
+                        viewModel.acceptConnection(endpointId)
+                    }
+                }
+            },
+            title = {
+                val connectionInfo = showAlertDialogEvent.value?.second
+                Text(
+                    text = "Accept connection to ${connectionInfo?.endpointName} ?",
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        color = Color(0xFFFFFFFF),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.W600
+                    )
+                )
+            },
+            text = {
+                val connectionInfo = showAlertDialogEvent.value?.second
+                Text(
+                    text = "Confirm the code matches on both devices: + ${connectionInfo?.authenticationDigits}",
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        color = Color(0xFFFFFFFF),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.W600
+                    )
+                )
+            }
+        )
+    }
+    Scaffold(topBar = { TopBar() }) { contentPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+        ) {
+            HomeViewContent(
+                advertisingState = advertisingState,
+                discoveryState = discoveryState,
+                onStartAdvertising = {
+                    viewModel.startAdvertising()
+                },
+                onStopAdvertising = {
+                    viewModel.stopAdvertising()
+                },
+                onStartDiscovery = {
+                    viewModel.startDiscovery()
+                })
+            {
+                viewModel.stopDiscovery()
+            }
+        }
+    }
+}
+
+@Composable
+fun TopBar() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = Color(0xFF01347F))
+            .padding(10.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Text Me",
+            textAlign = TextAlign.Center,
+            style = TextStyle(
+                color = Color(0xFFFFFFFF),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.W600
+            )
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun LaunchPermissionRequest(coroutine: CoroutineScope, context: Context) {
     val check =
         context.checkSelfPermission(Manifest.permission.ACCESS_WIFI_STATE) == PackageManager.PERMISSION_GRANTED
     val multiplePermissionState =
@@ -80,51 +201,24 @@ fun HomeView() {
         Log.d("TM", "is access wifi state granted: $check")
 
     }
-    Scaffold(topBar = { TopBar() }) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-        ) {
-            HomeViewContent(onStartAdvertisingClick = {
-                coroutine.launch {
-                    viewModel.startAdvertising()
-                }
-            }) {
-                coroutine.launch {
-                    viewModel.startDiscovery()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = Color(0xFF01347F))
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Text Me",
-            textAlign = TextAlign.Center,
-            style = TextStyle(
-                color = Color(0xFFFFFFFF),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.W600
-            )
-        )
-    }
 }
 
 @Composable
 fun HomeViewContent(
-    onStartAdvertisingClick: () -> Unit,
-    onStartDiscoveryClick: () -> Unit
+    advertisingState: State<Result>,
+    discoveryState: State<Result>,
+    onStartAdvertising: () -> Unit,
+    onStopAdvertising: () -> Unit,
+    onStartDiscovery: () -> Unit,
+    onStopDiscovery: () -> Unit
 ) {
+    val isAdvertising = remember {
+        mutableStateOf(false)
+    }
+
+    val isDiscovery = remember {
+        mutableStateOf(false)
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -157,6 +251,11 @@ fun HomeViewContent(
             DeviceItem("Device 1")
             DeviceItem("Device 2")
             DeviceItem("Device 3")
+            Spacer(modifier = Modifier.height(10.dp))
+            NearByStatus(
+                advertisingState = advertisingState,
+                discoveryState = discoveryState
+            )
         }
         Spacer(modifier = Modifier.height(10.dp))
         Row(
@@ -165,22 +264,114 @@ fun HomeViewContent(
                 .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(
-                onClick = { onStartAdvertisingClick() },
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(text = "Start Advertising")
+            if (isAdvertising.value) {
+                Button(
+                    onClick = {
+                        onStopAdvertising()
+                        isAdvertising.value = false
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text(text = "Stop Advertising")
+                }
+            } else {
+                Button(
+                    onClick = {
+                        onStartAdvertising()
+                        isAdvertising.value = true
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f),
+                    enabled = !isDiscovery.value,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF01347F),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = "Start Advertising")
+                }
             }
+
             Spacer(modifier = Modifier.weight(0.1f))
-            Button(
-                onClick = { onStartDiscoveryClick() },
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(text = "Start Discovery")
+
+            if (isDiscovery.value) {
+                Button(
+                    onClick = {
+                        onStopDiscovery()
+                        isDiscovery.value = false
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text(text = "Stop Discovery")
+                }
+            } else {
+                Button(
+                    onClick = {
+                        onStartDiscovery()
+                        isDiscovery.value = true
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f),
+                    enabled = !isAdvertising.value,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF01347F),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = "Start Discovery")
+                }
             }
         }
+    }
+}
+
+@Composable
+fun NearByStatus(
+    advertisingState: State<Result>,
+    discoveryState: State<Result>,
+) {
+    Text(
+        text = when (advertisingState.value) {
+            is Result.Success -> "Start advertising success"
+            is Result.Empty -> "Not Advertising"
+            is Result.Error -> "Start advertising fail ${(advertisingState.value as Result.Error).message}"
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp),
+        color = Color.Black
+    )
+    Spacer(modifier = Modifier.height(10.dp))
+    Text(
+        text = when (discoveryState.value) {
+            is Result.Success -> "Start discovery success"
+            is Result.Empty -> "Not Discovering"
+            is Result.Error -> "Start discovery fail ${(discoveryState.value as Result.Error).message}"
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp),
+        color = Color.Black
+    )
+    Spacer(modifier = Modifier.height(10.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+    ) {
+        Text(
+            text = "Is advertising: ${advertisingState.value is Result.Success}",
+            color = Color.Black
+        )
+        Spacer(modifier = Modifier.width(20.dp))
+        Text(
+            text = "Is discovery: ${discoveryState.value is Result.Success}",
+            color = Color.Black
+        )
     }
 }
 
@@ -221,10 +412,20 @@ fun DeviceItem(text: String) {
     }
 }
 
+private val mPayloadCallback: PayloadCallback = object : PayloadCallback() {
+    override fun onPayloadReceived(endpointId: String, payload: Payload) {
+        Log.d("TM", "Payload received")
+    }
+
+    override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
+        Log.d("TM", "Payload transfer update")
+    }
+}
+
 @Preview
 @Composable
 fun HomeViewPreview() {
     TextMessageTheme {
-        HomeViewContent({}) {}
+//        HomeViewContent({}) {}
     }
 }
