@@ -1,9 +1,12 @@
 package com.minhnha.textmessage.ui.home
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.nearby.connection.ConnectionInfo
+import com.minhnha.domain.entity.ConnectionStatus
 import com.minhnha.domain.interfaces.DeviceConnectionRepository
 import com.minhnha.domain.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,8 +18,21 @@ class HomeViewModel @Inject constructor(private val repository: DeviceConnection
     ViewModel() {
     val advertisingStatus: LiveData<Result> = repository.advertisingStatus
     val discoveryStatus: LiveData<Result> = repository.discoveryStatus
+    val connectionStatus: LiveData<ConnectionStatus> = repository.connectionStatus
     val showAlertDialogEvent: LiveData<Pair<String, ConnectionInfo>> =
         repository.showAlertDialogEvent
+    val receivedMessage: LiveData<String> = repository.receivedMessage
+    private val _shouldShowDialog = MutableLiveData(false)
+    private val mEndpointId = mutableStateOf("")
+    val shouldShowDialog: LiveData<Boolean> = _shouldShowDialog
+
+    init {
+        showAlertDialogEvent.observeForever { newData ->
+            if (newData != null) { // Optional check for null if needed
+                _shouldShowDialog.value = true
+            }
+        }
+    }
 
     fun startAdvertising() {
         viewModelScope.launch {
@@ -44,6 +60,7 @@ class HomeViewModel @Inject constructor(private val repository: DeviceConnection
 
     fun acceptConnection(endpointId: String) {
         viewModelScope.launch {
+            mEndpointId.value = endpointId
             repository.acceptConnection(endpointId)
         }
     }
@@ -52,5 +69,21 @@ class HomeViewModel @Inject constructor(private val repository: DeviceConnection
         viewModelScope.launch {
             repository.rejectConnection(endpointId)
         }
+    }
+
+    fun sendData(message: String) {
+        viewModelScope.launch {
+            repository.sendData(mEndpointId.value, message)
+        }
+    }
+
+    fun stopAllConnection() {
+        viewModelScope.launch {
+            repository.stopAllConnection()
+        }
+    }
+
+    fun dismissDialog() {
+        _shouldShowDialog.postValue(false)
     }
 }

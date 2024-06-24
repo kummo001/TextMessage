@@ -10,6 +10,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -39,7 +42,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -51,9 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.google.android.gms.nearby.connection.Payload
-import com.google.android.gms.nearby.connection.PayloadCallback
-import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import com.minhnha.domain.entity.ConnectionStatus
 import com.minhnha.domain.util.Result
 import com.minhnha.textmessage.R
 import com.minhnha.textmessage.theme.TextMessageTheme
@@ -71,24 +74,25 @@ fun HomeView() {
         viewModel.advertisingStatus.observeAsState(initial = Result.Empty)
     val discoveryState: State<Result> =
         viewModel.discoveryStatus.observeAsState(initial = Result.Empty)
+    val connectionState: State<ConnectionStatus> =
+        viewModel.connectionStatus.observeAsState(initial = ConnectionStatus.ConnectionRejected)
     val showAlertDialogEvent: State<Pair<String, ConnectionInfo>?> =
         viewModel.showAlertDialogEvent.observeAsState()
-    val openDialog = remember {
-        mutableStateOf(false)
-    }
+    val shouldShowDialog: State<Boolean> =
+        viewModel.shouldShowDialog.observeAsState(initial = false)
+    val focusManager = LocalFocusManager.current
+    val receivedMessage: State<String> = viewModel.receivedMessage.observeAsState(initial = "")
     Log.d("TM", "Alert dialog event 1: ${showAlertDialogEvent.value?.first}")
     Log.d("TM", "Alert dialog event 2: ${showAlertDialogEvent.value?.second}")
     LaunchPermissionRequest(coroutine = coroutine, context = context)
-    if (showAlertDialogEvent.value?.first != null) {
-        openDialog.value = true
-    }
-    if (openDialog.value) {
+    if (shouldShowDialog.value) {
         AlertDialog(
             onDismissRequest = {
                 val endpointId = showAlertDialogEvent.value?.first
                 if (endpointId != null) {
                     viewModel.rejectConnection(endpointId)
                 }
+                viewModel.dismissDialog()
             },
             confirmButton = {
                 val endpointId = showAlertDialogEvent.value?.first
@@ -96,6 +100,7 @@ fun HomeView() {
                     if (endpointId != null) {
                         viewModel.acceptConnection(endpointId)
                     }
+                    viewModel.dismissDialog()
                 }
             },
             title = {
@@ -129,10 +134,24 @@ fun HomeView() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                }
         ) {
             HomeViewContent(
                 advertisingState = advertisingState,
                 discoveryState = discoveryState,
+                receivedMessage = receivedMessage,
+                connectionState = connectionState,
+                connectionEvent = showAlertDialogEvent,
+                onSendDataClick = { message ->
+                    viewModel.sendData(message = message)
+                },
+                onStopConnectionClick = {
+                    viewModel.stopAllConnection()
+                },
                 onStartAdvertising = {
                     viewModel.startAdvertising()
                 },
@@ -207,6 +226,11 @@ fun LaunchPermissionRequest(coroutine: CoroutineScope, context: Context) {
 fun HomeViewContent(
     advertisingState: State<Result>,
     discoveryState: State<Result>,
+    receivedMessage: State<String>,
+    connectionState: State<ConnectionStatus>,
+    connectionEvent: State<Pair<String, ConnectionInfo>?>,
+    onSendDataClick: (message: String) -> Unit,
+    onStopConnectionClick: () -> Unit,
     onStartAdvertising: () -> Unit,
     onStopAdvertising: () -> Unit,
     onStartDiscovery: () -> Unit,
@@ -219,6 +243,10 @@ fun HomeViewContent(
     val isDiscovery = remember {
         mutableStateOf(false)
     }
+
+    val sendMessage = remember {
+        mutableStateOf("")
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -230,7 +258,7 @@ fun HomeViewContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(10.dp),
-            text = "Scanned devices: ",
+            text = "Status ",
             style = TextStyle(
                 fontSize = 20.sp,
                 color = Color.Black,
@@ -248,14 +276,74 @@ fun HomeViewContent(
                     shape = RoundedCornerShape(2.dp)
                 )
         ) {
-            DeviceItem("Device 1")
-            DeviceItem("Device 2")
-            DeviceItem("Device 3")
+            DeviceItem(connectionEvent.value?.second?.endpointName)
             Spacer(modifier = Modifier.height(10.dp))
             NearByStatus(
                 advertisingState = advertisingState,
                 discoveryState = discoveryState
             )
+            Text(
+                text = "Received message: ${receivedMessage.value}",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
+                color = Color.Black
+            )
+            if (connectionState.value is ConnectionStatus.ConnectionOk) {
+                TextField(
+                    value = sendMessage.value,
+                    onValueChange = {
+                        sendMessage.value = it
+                    },
+                    modifier = Modifier.padding(horizontal = 10.dp),
+                    colors = TextFieldDefaults.colors().copy(
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        disabledTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = { onSendDataClick(sendMessage.value) },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF01347F),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = "Send data")
+                    }
+
+                    Spacer(modifier = Modifier.weight(0.1f))
+
+                    Button(
+                        onClick = { onStopConnectionClick() },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = "Stop Connection", color = Color.Black)
+                    }
+                }
+            } else {
+                Text(
+                    text = "Connection is disconnected ...",
+                    style = TextStyle(color = Color.Black),
+                    modifier = Modifier.padding(horizontal = 10.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(10.dp))
         Row(
@@ -287,7 +375,8 @@ fun HomeViewContent(
                     enabled = !isDiscovery.value,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF01347F),
-                        contentColor = Color.White
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.Gray
                     )
                 ) {
                     Text(text = "Start Advertising")
@@ -319,7 +408,8 @@ fun HomeViewContent(
                     enabled = !isAdvertising.value,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF01347F),
-                        contentColor = Color.White
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.Gray
                     )
                 ) {
                     Text(text = "Start Discovery")
@@ -377,48 +467,48 @@ fun NearByStatus(
 
 
 @Composable
-fun DeviceItem(text: String) {
-    Card(
-        onClick = { /*TODO*/ },
-        border = BorderStroke(width = 1.dp, color = Color.Blue),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardColors(
-            containerColor = Color.White,
-            contentColor = Color.Black,
-            disabledContentColor = Color.Black,
-            disabledContainerColor = Color.Gray
-        )
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = text,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 20.dp),
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    color = Color.Black
+fun DeviceItem(text: String?) {
+    if (!text.isNullOrBlank()) {
+        Card(
+            onClick = { /*TODO*/ },
+            border = BorderStroke(width = 1.dp, color = Color.Blue),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardColors(
+                containerColor = Color.White,
+                contentColor = Color.Black,
+                disabledContentColor = Color.Black,
+                disabledContainerColor = Color.Gray
+            )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = text,
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp, vertical = 20.dp)
+                        .weight(5f),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Start
+                    ),
+                    maxLines = 1
                 )
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Image(
-                painter = painterResource(id = R.drawable.baseline_phone_iphone_24),
-                contentDescription = "Phone",
-                modifier = Modifier.size(40.dp)
-            )
+                Image(
+                    painter = painterResource(id = R.drawable.baseline_phone_iphone_24),
+                    contentDescription = "Phone",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .weight(1f)
+                )
+            }
+
         }
-
-    }
-}
-
-private val mPayloadCallback: PayloadCallback = object : PayloadCallback() {
-    override fun onPayloadReceived(endpointId: String, payload: Payload) {
-        Log.d("TM", "Payload received")
-    }
-
-    override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-        Log.d("TM", "Payload transfer update")
     }
 }
 

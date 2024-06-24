@@ -20,8 +20,8 @@ fun BaseButton(
         enabled = isEnable,
         colors = ButtonDefaults.buttonColors().copy(
             contentColor = Color.Black,
-            disabledContentColor = Color.Gray,
-            containerColor = Color.Green,
+            disabledContentColor = Color.Black,
+            containerColor = Color(0xFF01347F),
             disabledContainerColor = Color.Red
         )
     ) {

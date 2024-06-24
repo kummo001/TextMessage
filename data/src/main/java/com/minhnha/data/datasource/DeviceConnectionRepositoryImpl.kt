@@ -17,6 +17,7 @@ import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
+import com.minhnha.domain.entity.ConnectionStatus
 import com.minhnha.domain.interfaces.DeviceConnectionRepository
 import com.minhnha.domain.util.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,18 +29,29 @@ import javax.inject.Singleton
 @Singleton
 class DeviceConnectionRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
-) :
-    DeviceConnectionRepository {
+) : DeviceConnectionRepository {
 
     private val SERVICE_ID = "com.minhnha.textmessage.SERVICE_ID"
 
     private val _advertisingStatus = MutableLiveData<Result>()
-    override val advertisingStatus: LiveData<Result> = _advertisingStatus
+    override val advertisingStatus: LiveData<Result>
+        get() = _advertisingStatus
+
     private val _discoveryStatus = MutableLiveData<Result>()
-    override val discoveryStatus: LiveData<Result> = _discoveryStatus
+    override val discoveryStatus: LiveData<Result>
+        get() = _discoveryStatus
+
+    private val _connectionStatus = MutableLiveData<ConnectionStatus>()
+    override val connectionStatus: LiveData<ConnectionStatus>
+        get() = _connectionStatus
+
     private val _showAlertDialogEvent = MutableLiveData<Pair<String, ConnectionInfo>>()
-    override val showAlertDialogEvent: LiveData<Pair<String, ConnectionInfo>> =
-        _showAlertDialogEvent
+    override val showAlertDialogEvent: LiveData<Pair<String, ConnectionInfo>>
+        get() = _showAlertDialogEvent
+
+    private val _receivedMessage = MutableLiveData<String>()
+    override val receivedMessage: LiveData<String>
+        get() = _receivedMessage
 
 
     override suspend fun startAdvertising() {
@@ -77,10 +89,12 @@ class DeviceConnectionRepositoryImpl @Inject constructor(
 
     override suspend fun stopAdvertising() {
         Nearby.getConnectionsClient(context).stopAdvertising()
+        _advertisingStatus.postValue(Result.Empty)
     }
 
     override suspend fun stopDiscovery() {
         Nearby.getConnectionsClient(context).stopDiscovery()
+        _discoveryStatus.postValue(Result.Empty)
     }
 
     override suspend fun acceptConnection(endpointId: String) {
@@ -93,54 +107,39 @@ class DeviceConnectionRepositoryImpl @Inject constructor(
             .rejectConnection(endpointId)
     }
 
-    override suspend fun connectDevices() {
-        Log.d("TM", "connect device")
+    override suspend fun sendData(endpointId: String, message: String) {
+        sendPayload(endpointId, message)
+    }
+
+    override suspend fun stopAllConnection() {
+        Nearby.getConnectionsClient(context)
+            .stopAllEndpoints()
     }
 
     private val connectionLifecycleCallback: ConnectionLifecycleCallback =
         object : ConnectionLifecycleCallback() {
             override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
                 Log.d("TM", "On connection initiated")
-                // Automatically accept the connection on both sides.
                 _showAlertDialogEvent.postValue(Pair(endpointId, connectionInfo))
-//                AlertDialog.Builder(
-//                    ContextThemeWrapper(
-//                        context,
-//                        R.style.MyAppCompatDialog
-//                    )
-//                )
-//                    .setTitle("Accept connection to " + connectionInfo.endpointName)
-//                    .setMessage("Confirm the code matches on both devices: " + connectionInfo.authenticationDigits)
-//                    .setPositiveButton("Accept") { _, _ ->
-//                        Nearby.getConnectionsClient(context)
-//                            .acceptConnection(endpointId, mPayloadCallback)
-//                    }
-//                    .setNegativeButton("Cancel") { _, _ ->
-//                        Nearby.getConnectionsClient(context)
-//                            .rejectConnection(endpointId)
-//                    }
-//                    .setIcon(android.R.drawable.ic_dialog_alert)
-//                    .show()
-//                Nearby.getConnectionsClient(context)
-//                    .acceptConnection(endpointId, mPayloadCallback)
             }
 
             override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
                 when (result.status.statusCode) {
                     ConnectionsStatusCodes.STATUS_OK -> {
-                        Log.d("TM", "Connection status ok")
+                        Log.d("TM", "Connection status ok, automatically send an data now")
+                        _connectionStatus.postValue(ConnectionStatus.ConnectionOk)
                     }
 
                     ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
-                        Log.d("TM", "Connection status rejected")
+                        _connectionStatus.postValue(ConnectionStatus.ConnectionRejected)
                     }
 
                     ConnectionsStatusCodes.STATUS_ERROR -> {
-                        Log.d("TM", "Connection status error")
+                        _connectionStatus.postValue(ConnectionStatus.ConnectionError("Status error"))
                     }
 
                     else -> {
-                        Log.d("TM", "Unknown")
+                        _connectionStatus.postValue(ConnectionStatus.ConnectionError("Unknown error"))
                     }
                 }
             }
@@ -173,12 +172,30 @@ class DeviceConnectionRepositoryImpl @Inject constructor(
 
     private val mPayloadCallback: PayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
+            val receivedBytes = payload.asBytes()
+            val receivedString = receivedBytes?.toString(Charsets.UTF_8)
+            _receivedMessage.postValue(receivedString)
             Log.d("TM", "Payload received")
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
             Log.d("TM", "Payload transfer update")
+            if (update.status == PayloadTransferUpdate.Status.SUCCESS) {
+                Log.d("TM", "Send data success")
+            }
         }
+    }
+
+    private fun sendPayload(endPointId: String, message: String) {
+        Log.d("TM", "Start send payload")
+        val bytesPayload = Payload.fromBytes(message.toByteArray(Charsets.UTF_8))
+        Nearby.getConnectionsClient(context).sendPayload(endPointId, bytesPayload)
+            .addOnSuccessListener {
+                Log.d("TM", "Send payload success")
+            }
+            .addOnFailureListener {
+                Log.d("TM", "Send payload fail")
+            }
     }
 
     private fun getNickname() = UUID.randomUUID().toString()
