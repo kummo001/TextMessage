@@ -17,7 +17,7 @@ import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
-import com.minhnha.domain.entity.ConnectionStatus
+import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.interfaces.DeviceConnectionRepository
 import com.minhnha.domain.util.Result
 import dagger.hilt.android.qualifiers.ApplicationContext

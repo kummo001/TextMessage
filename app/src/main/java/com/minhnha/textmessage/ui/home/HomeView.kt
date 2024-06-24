@@ -56,7 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.minhnha.domain.entity.ConnectionStatus
+import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.util.Result
 import com.minhnha.textmessage.R
 import com.minhnha.textmessage.theme.TextMessageTheme
@@ -103,6 +103,15 @@ fun HomeView() {
                     viewModel.dismissDialog()
                 }
             },
+            dismissButton = {
+                val endpointId = showAlertDialogEvent.value?.first
+                BaseButton(modifier = Modifier, isEnable = true, text = "Cancel") {
+                    if (endpointId != null) {
+                        viewModel.rejectConnection(endpointId)
+                    }
+                    viewModel.dismissDialog()
+                }
+            },
             title = {
                 val connectionInfo = showAlertDialogEvent.value?.second
                 Text(
@@ -126,7 +135,8 @@ fun HomeView() {
                         fontWeight = FontWeight.W600
                     )
                 )
-            }
+            },
+            containerColor = Color.White
         )
     }
     Scaffold(topBar = { TopBar() }) { contentPadding ->

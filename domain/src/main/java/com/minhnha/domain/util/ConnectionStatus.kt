@@ -1,4 +1,4 @@
-package com.minhnha.domain.entity
+package com.minhnha.domain.util
 
 sealed class ConnectionStatus {
     data object ConnectionOk : ConnectionStatus()

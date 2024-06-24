@@ -2,7 +2,7 @@ package com.minhnha.domain.interfaces
 
 import androidx.lifecycle.LiveData
 import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.minhnha.domain.entity.ConnectionStatus
+import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.util.Result
 
 interface DeviceConnectionRepository {

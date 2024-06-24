@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.minhnha.domain.entity.ConnectionStatus
+import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.interfaces.DeviceConnectionRepository
 import com.minhnha.domain.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
