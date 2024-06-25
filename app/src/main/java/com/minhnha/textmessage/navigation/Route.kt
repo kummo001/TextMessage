@@ -23,3 +23,13 @@ sealed class SplashRoute : TextMessageRoute() {
         }
     }
 }
+
+sealed class MessageHistoryRoute : TextMessageRoute() {
+    class MessageHistory : SplashRoute() {
+        override val route = Route
+
+        companion object {
+            const val Route = "MessageHistory"
+        }
+    }
+}

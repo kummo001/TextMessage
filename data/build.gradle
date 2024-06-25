@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id 'kotlin-kapt'
+    id 'androidx.room'
 }
 
 android {
@@ -27,6 +29,9 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    room {
+        schemaDirectory "$projectDir/schemas"
+    }
 }
 
 dependencies {
@@ -41,4 +46,14 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
+
+    implementation libs.hilt.android.v2511
+    annotationProcessor libs.hilt.compiler.v2511
+    kapt libs.hilt.compiler.v2511
+
+    //room
+    implementation libs.androidx.room.runtime
+    kapt libs.androidx.room.compiler
+    implementation libs.androidx.room.ktx
+    kapt(libs.kotlinx.metadata.jvm)
 }

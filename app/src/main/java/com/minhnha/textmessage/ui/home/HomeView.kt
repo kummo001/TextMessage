@@ -53,20 +53,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.util.Result
 import com.minhnha.textmessage.R
+import com.minhnha.textmessage.navigation.MessageHistoryRoute
 import com.minhnha.textmessage.theme.TextMessageTheme
 import com.minhnha.textmessage.ui.composables.BaseButton
+import com.minhnha.textmessage.ui.composables.TopBar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun HomeView() {
+fun HomeView(navController: NavController) {
     val viewModel = hiltViewModel<HomeViewModel>()
     val coroutine = rememberCoroutineScope()
     val context = LocalContext.current
@@ -118,7 +121,7 @@ fun HomeView() {
                     text = "Accept connection to ${connectionInfo?.endpointName} ?",
                     textAlign = TextAlign.Center,
                     style = TextStyle(
-                        color = Color(0xFFFFFFFF),
+                        color = Color.Black,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.W600
                     )
@@ -130,7 +133,7 @@ fun HomeView() {
                     text = "Confirm the code matches on both devices: + ${connectionInfo?.authenticationDigits}",
                     textAlign = TextAlign.Center,
                     style = TextStyle(
-                        color = Color(0xFFFFFFFF),
+                        color = Color.Black,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.W600
                     )
@@ -159,6 +162,9 @@ fun HomeView() {
                 onSendDataClick = { message ->
                     viewModel.sendData(message = message)
                 },
+                onHistoryButtonClick = {
+                    navController.navigate(MessageHistoryRoute.MessageHistory.Route)
+                },
                 onStopConnectionClick = {
                     viewModel.stopAllConnection()
                 },
@@ -175,27 +181,6 @@ fun HomeView() {
                 viewModel.stopDiscovery()
             }
         }
-    }
-}
-
-@Composable
-fun TopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = Color(0xFF01347F))
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Text Me",
-            textAlign = TextAlign.Center,
-            style = TextStyle(
-                color = Color(0xFFFFFFFF),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.W600
-            )
-        )
     }
 }
 
@@ -239,6 +224,7 @@ fun HomeViewContent(
     receivedMessage: State<String>,
     connectionState: State<ConnectionStatus>,
     connectionEvent: State<Pair<String, ConnectionInfo>?>,
+    onHistoryButtonClick: () -> Unit,
     onSendDataClick: (message: String) -> Unit,
     onStopConnectionClick: () -> Unit,
     onStartAdvertising: () -> Unit,
@@ -353,6 +339,20 @@ fun HomeViewContent(
                     style = TextStyle(color = Color.Black),
                     modifier = Modifier.padding(horizontal = 10.dp)
                 )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = { onHistoryButtonClick() },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF01347F),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(text = "Message history", color = Color.White)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
