@@ -80,10 +80,12 @@ dependencies {
     annotationProcessor libs.hilt.compiler.v2511
     kapt libs.hilt.compiler.v2511
 
+    //android testing
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation platform(libs.androidx.compose.bom)
     androidTestImplementation libs.androidx.ui.test.junit4
+    androidTestImplementation libs.mockito.core.v490
 
     //Testing
     testImplementation libs.junit

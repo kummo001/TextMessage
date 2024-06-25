@@ -43,10 +43,8 @@ dependencies {
     implementation libs.play.services.nearby
     annotationProcessor libs.hilt.compiler.v2511
     implementation project(':domain')
-    testImplementation libs.junit
-    androidTestImplementation libs.androidx.junit
-    androidTestImplementation libs.androidx.espresso.core
 
+    //hilt
     implementation libs.hilt.android.v2511
     annotationProcessor libs.hilt.compiler.v2511
     kapt libs.hilt.compiler.v2511
@@ -56,4 +54,23 @@ dependencies {
     kapt libs.androidx.room.compiler
     implementation libs.androidx.room.ktx
     kapt(libs.kotlinx.metadata.jvm)
+
+    //android testing
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+    androidTestImplementation platform(libs.androidx.compose.bom)
+    androidTestImplementation libs.androidx.ui.test.junit4
+    androidTestImplementation libs.mockito.core.v490
+    androidTestImplementation libs.truth
+    androidTestImplementation libs.androidx.core.testing
+
+    //Testing
+    testImplementation libs.junit
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.kotlin
+    testImplementation libs.kotlin.mockito.kotlin
+    testImplementation libs.truth
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.androidx.core.testing
+    testImplementation libs.junit.v412
 }

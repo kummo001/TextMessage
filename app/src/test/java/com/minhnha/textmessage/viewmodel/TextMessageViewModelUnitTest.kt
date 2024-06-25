@@ -3,15 +3,18 @@ package com.minhnha.textmessage.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
+import com.minhnha.domain.usecase.message.InsertMessageUseCase
 import com.minhnha.domain.util.Result
 import com.minhnha.textmessage.MainCoroutineRule
 import com.minhnha.textmessage.getOrAwaitValueTest
+import com.minhnha.textmessage.repo.MessageFakeRepository
 import com.minhnha.textmessage.repo.TMFakeRepository
 import com.minhnha.textmessage.ui.home.HomeViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TextMessageViewModelUnitTest {
@@ -24,10 +27,14 @@ class TextMessageViewModelUnitTest {
 
     private lateinit var viewModel: HomeViewModel
 
+    @Mock
+    private lateinit var insertUseCase: InsertMessageUseCase
+
     @Before
     fun setUp() {
         //Test double
-        viewModel = HomeViewModel(TMFakeRepository())
+        insertUseCase = InsertMessageUseCase(MessageFakeRepository())
+        viewModel = HomeViewModel(TMFakeRepository(), insertUseCase)
     }
 
     @Test
