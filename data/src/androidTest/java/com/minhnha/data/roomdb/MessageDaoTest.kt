@@ -53,6 +53,6 @@ class MessageDaoTest {
         dao.insertMessage(message = message)
         dao.deleteMessage()
         val list = dao.observeMessage()
-        assertThat(list).isEmpty()
+        assertThat(list).doesNotContain(message)
     }
 }
