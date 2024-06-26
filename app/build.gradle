@@ -108,5 +108,8 @@ dependencies {
 
     // For instrumented tests.
     androidTestImplementation libs.hilt.android.testing
+    androidTestImplementation libs.ui.test.junit4
+    androidTestImplementation libs.androidx.navigation.testing
     kaptAndroidTest libs.hilt.android.compiler
+    debugImplementation libs.ui.test.manifest
 }

@@ -25,12 +25,14 @@ mockitoKotlinVersion = "5.3.1"
 navigationCommonKtx = "2.7.7"
 navigationCompose = "2.7.7"
 navigationRuntimeKtx = "2.7.7"
+navigationTestingVersion = "2.7.7"
 playServicesNearby = "19.3.0"
 roomRuntime = "2.6.1"
 runtimeLivedata = "1.6.8"
 junitKtx = "1.1.5"
 monitor = "1.6.1"
 truth = "1.4.2"
+uiTestJunit4Version = "1.6.8"
 uiTestManifest = "1.6.8"
 
 [libraries]
@@ -41,6 +43,7 @@ androidx-core-testing = { module = "androidx.arch.core:core-testing", version.re
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navigationTestingVersion" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
@@ -75,6 +78,7 @@ play-services-nearby = { group = "com.google.android.gms", name = "play-services
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 androidx-monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
+ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "uiTestJunit4Version" }
 ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "uiTestManifest" }
 
 [plugins]
