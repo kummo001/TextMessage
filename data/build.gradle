@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id 'kotlin-kapt'
     id 'androidx.room'
+    id 'dagger.hilt.android.plugin'
+    id 'com.google.dagger.hilt.android'
 }
 
 android {
@@ -11,8 +13,7 @@ android {
 
     defaultConfig {
         minSdk 31
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.minhnha.data.HiltTestRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -73,4 +74,14 @@ dependencies {
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.androidx.core.testing
     testImplementation libs.junit.v412
+
+    //hilt testing
+    testImplementation libs.hilt.android.testing
+    kaptTest libs.hilt.android.compiler
+
+
+    // For instrumented tests.
+    androidTestImplementation libs.hilt.android.testing
+    kaptAndroidTest libs.hilt.android.compiler
+    debugImplementation libs.ui.test.manifest
 }
