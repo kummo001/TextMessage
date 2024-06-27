@@ -17,7 +17,7 @@ import org.junit.Test
 import org.mockito.Mock
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TextMessageViewModelUnitTest {
+class HomeViewModelTest {
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()

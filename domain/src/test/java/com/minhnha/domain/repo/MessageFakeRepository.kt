@@ -1,14 +1,11 @@
-package com.minhnha.textmessage.repo
+package com.minhnha.domain.repo
 
-import android.util.Log
 import com.minhnha.domain.entity.Message
 import com.minhnha.domain.interfaces.MessageRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-class MessageFakeRepository: MessageRepository {
-    private val list = mutableListOf<Message>()
-    private val flow = MutableSharedFlow<Int>()
-    suspend fun emit(value: Int) = flow.emit(value)
+class MessageFakeRepository : MessageRepository {
+    val list = mutableListOf<Message>()
 
     override suspend fun insertMessage(message: Message) {
         list.add(message)

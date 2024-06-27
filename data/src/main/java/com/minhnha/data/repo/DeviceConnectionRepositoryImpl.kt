@@ -17,8 +17,8 @@ import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
-import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.interfaces.DeviceConnectionRepository
+import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.util.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.UUID
@@ -166,7 +166,7 @@ class DeviceConnectionRepositoryImpl @Inject constructor(
 
             override fun onEndpointLost(endpointId: String) {
                 // A previously discovered endpoint has gone away.
-                Log.d("TM", "On endpoint lost")
+                _connectionStatus.postValue(ConnectionStatus.ConnectionError("Endpoint lost"))
             }
         }
 
