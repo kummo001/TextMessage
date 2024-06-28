@@ -34,10 +34,6 @@ class MessageHistoryViewModel @Inject constructor(
     val uiState: StateFlow<MessageHistoryUiState>
         get() = _uiState
 
-    init {
-        getAllMessage()
-    }
-
     fun deleteMessage() {
         viewModelScope.launch {
             deleteMessageUseCase.invoke(Unit)

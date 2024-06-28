@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +31,9 @@ import com.minhnha.textmessage.ui.composables.TopBar
 fun MessageHistoryView() {
     val viewModel = hiltViewModel<MessageHistoryViewModel>()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(key1 = Unit) {
+        viewModel.getAllMessage()
+    }
     val listMessage = uiState.value.listMessage
     Scaffold(topBar = { TopBar() }) { contentPadding ->
         Box(
