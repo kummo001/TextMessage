@@ -3,6 +3,7 @@ package com.minhnha.textmessage.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
+import com.minhnha.domain.entity.Message
 import com.minhnha.domain.usecase.message.InsertMessageUseCase
 import com.minhnha.domain.util.Result
 import com.minhnha.textmessage.MainCoroutineRule
@@ -49,5 +50,13 @@ class HomeViewModelTest {
         viewModel.startDiscovery()
         val value = viewModel.discoveryStatus.getOrAwaitValueTest()
         assertThat(value).isEqualTo(Result.Success)
+    }
+
+    @Test
+    fun `check compare`() {
+        val msg = Message(1, "Hi", " John")
+        val msg2 = Message(1, "Hi", " John")
+        val check = msg == msg2
+        assertThat(check).isTrue()
     }
 }

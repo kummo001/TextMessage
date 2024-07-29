@@ -12,6 +12,7 @@ import com.minhnha.domain.interfaces.DeviceConnectionRepository
 import com.minhnha.domain.usecase.message.InsertMessageUseCase
 import com.minhnha.domain.util.ConnectionStatus
 import com.minhnha.domain.util.Result
+import com.minhnha.textmessage.utils.SingletonHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -98,7 +99,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun insertMessage(message: String, endpointId: String) {
-        Log.d("TM","insert message")
+        Log.d("TM", "insert message")
         val messageObject = Message(
             endPointId = endpointId,
             message = message
@@ -106,6 +107,9 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             insertMessageUseCase.invoke(messageObject)
         }
+        val instance = SingletonHelper.getInstance()
+        instance.doSomething()
+        messageObject.hashCode()
     }
 
     fun dismissDialog() {

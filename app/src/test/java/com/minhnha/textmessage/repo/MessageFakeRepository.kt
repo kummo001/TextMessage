@@ -3,6 +3,7 @@ package com.minhnha.textmessage.repo
 import android.util.Log
 import com.minhnha.domain.entity.Message
 import com.minhnha.domain.interfaces.MessageRepository
+import com.minhnha.textmessage.utils.Test.A
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 class MessageFakeRepository: MessageRepository {

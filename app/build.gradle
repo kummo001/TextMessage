@@ -75,6 +75,7 @@ dependencies {
     implementation libs.play.services.nearby
     implementation libs.androidx.junit.ktx
     implementation libs.androidx.monitor
+    implementation libs.jetbrains.kotlinx.coroutines.core
 
     //Hilt
     implementation libs.hilt.android

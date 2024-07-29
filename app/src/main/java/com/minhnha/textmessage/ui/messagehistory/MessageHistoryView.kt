@@ -21,7 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.minhnha.domain.entity.Message
 import com.minhnha.textmessage.theme.TextMessageTheme
 import com.minhnha.textmessage.ui.composables.BaseButton

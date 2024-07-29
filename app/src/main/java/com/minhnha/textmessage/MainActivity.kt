@@ -12,8 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import android.Manifest
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.minhnha.textmessage.navigation.MainView
 import com.minhnha.textmessage.theme.TextMessageTheme
@@ -22,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), ContextProvider {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

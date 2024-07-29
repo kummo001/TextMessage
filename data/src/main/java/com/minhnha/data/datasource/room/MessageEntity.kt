@@ -7,6 +7,6 @@ import androidx.room.PrimaryKey
 data class MessageEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int? = null,
-    var message: String,
-    var endPointId: String
+    val message: String,
+    val endPointId: String
 )
