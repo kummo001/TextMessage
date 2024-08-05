@@ -1,1 +1,1 @@
-P2P Text Message application
+P2P Text Message application git flow
